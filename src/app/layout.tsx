@@ -20,9 +20,9 @@ const body = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Aldermere — A quiet address in the city",
+  title: "Hotelierre — A quiet address in the city",
   description:
-    "Aldermere is a boutique hotel in Mayfair, London. Reserve rooms and suites with real-time pricing for your stay.",
+    "Hotelierre is a hotel in Lagos, Nigeria. Reserve rooms and suites with real-time pricing for your stay.",
   robots: { index: true, follow: true },
 };
 
