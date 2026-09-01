@@ -15,6 +15,7 @@ interface RoomModalProps {
   guest: GuestDetails;
   onGuestName: (value: string) => void;
   onGuestEmail: (value: string) => void;
+  onGuestPhone: (value: number) => void;
   onContinue: () => void;
   onBack: () => void;
   onSubmit: () => void;
@@ -33,6 +34,7 @@ export default function RoomModal({
   guest,
   onGuestName,
   onGuestEmail,
+  onGuestPhone,
   onContinue,
   onBack,
   onSubmit,
@@ -141,6 +143,8 @@ export default function RoomModal({
               nights={nights}
               name={guest.name}
               email={guest.email}
+              phone={guest.phone}
+              onPhone={(phone) => {onGuestPhone}}
               onName={onGuestName}
               onEmail={onGuestEmail}
               onBack={onBack}

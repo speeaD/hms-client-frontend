@@ -149,6 +149,7 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
           onGuestEmail={(email) =>
             setGuest((g) => ({ ...g, email: sanitizeOnChange(email, 254) }))
           }
+          onGuestPhone={(phone) => setGuest((g) => ({ ...g, phone: Number(sanitizeOnChange(phone.toString(), 11)) }))}
           onContinue={() => setStep("form")}
           onBack={() => setStep("detail")}
           onSubmit={submitReservation}
