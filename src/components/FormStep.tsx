@@ -16,6 +16,7 @@ interface FormStepProps {
   onPhone: (value: string) => void;
   onBack: () => void;
   onSubmit: () => void;
+  isProcessing?: boolean;
 }
 
 export default function FormStep({
@@ -29,6 +30,7 @@ export default function FormStep({
   onPhone,
   onBack,
   onSubmit,
+  isProcessing,
 }: FormStepProps) {
   const [submitted, setSubmitted] = useState(false);
   const errors = validateGuestForm(name, email, phone);
@@ -36,6 +38,7 @@ export default function FormStep({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isProcessing) return;
     setSubmitted(true);
     if (canSubmit) onSubmit();
   }
@@ -95,9 +98,13 @@ export default function FormStep({
 
       <button
         type="submit"
-        className="w-full cursor-pointer rounded-[3px] bg-ink py-3.5 font-body text-xs uppercase tracking-[0.1em] text-white transition-colors hover:bg-ink/90"
+        disabled={!canSubmit || !!isProcessing}
+        aria-disabled={!canSubmit || !!isProcessing}
+        className={`w-full cursor-pointer rounded-[3px] py-3.5 font-body text-xs uppercase tracking-[0.1em] text-white transition-colors ${
+          isProcessing ? "bg-ink/80" : "bg-ink hover:bg-ink/90"
+        }`}
       >
-        Confirm reservation · ₦{room.price * nights}
+        {isProcessing ? "Processing…" : `Confirm reservation · ₦${room.price * nights}`}
       </button>
     </form>
   );
