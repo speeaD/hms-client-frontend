@@ -9,9 +9,11 @@ interface FormStepProps {
   room: Room;
   nights: number;
   name: string;
+  phone: number;
   email: string;
   onName: (value: string) => void;
   onEmail: (value: string) => void;
+  onPhone: (value: string) => void;
   onBack: () => void;
   onSubmit: () => void;
 }
@@ -21,13 +23,15 @@ export default function FormStep({
   nights,
   name,
   email,
+  phone,
   onName,
   onEmail,
+  onPhone,
   onBack,
   onSubmit,
 }: FormStepProps) {
   const [submitted, setSubmitted] = useState(false);
-  const errors = validateGuestForm(name, email);
+  const errors = validateGuestForm(name, email, phone);
   const canSubmit = Object.keys(errors).length === 0;
 
   function handleSubmit(e: React.FormEvent) {
@@ -61,6 +65,16 @@ export default function FormStep({
           autoComplete="name"
           error={submitted ? errors.name : undefined}
           onChange={onName}
+        />
+        <Field
+          label="Phone number"
+          type="tel"
+          value={phone.toString()}
+          placeholder="123-456-7890"
+          maxLength={20}
+          autoComplete="tel"
+          error={submitted ? errors.phone : undefined}
+          onChange={onPhone}
         />
         <Field
           label="Email address"

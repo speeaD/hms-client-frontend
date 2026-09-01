@@ -30,7 +30,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html className={`${display.variable} ${body.variable}`}>
       <body className="font-body bg-white text-ink antialiased">
         {children}
       </body>

@@ -11,7 +11,7 @@ import { sanitizeOnChange } from "@/lib/validation";
 import type { BookingDetails, GuestDetails, ModalStep, Room } from "@/types/room";
 
 interface HotelExperienceProps {
-  rooms: Room[];
+  rooms: [Room];
 }
 
 const TODAY = todayISO();

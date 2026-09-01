@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 
 interface FieldProps {
   label: string;
-  type: "text" | "email";
+  type: "text" | "email" | "tel";
   value: string;
   placeholder: string;
   error?: string;

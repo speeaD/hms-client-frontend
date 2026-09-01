@@ -3,7 +3,7 @@
  * exist so the same rules can be re-applied server-side without surprises,
  * and so the UI never accepts obviously malformed or oversized input.
  */
-
+const MAX_PHONE_LENGTH = 11; // arbitrary, but long enough for international numbers
 const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 254; // RFC 5321 limit
 // Deliberately simple/conservative: good enough to catch typos client-side.
@@ -28,12 +28,19 @@ export function sanitizeText(value: string, maxLength: number): string {
   return sanitizeOnChange(value, maxLength).trim();
 }
 
+export function sanitizePhone(value: number, maxLength: number): number {
+  const stringValue = value.toString();
+  const sanitizedValue = stringValue.replace(CONTROL_CHARS, "").slice(0, maxLength);
+  return parseInt(sanitizedValue, 10);
+}
+
 export interface GuestFormErrors {
   name?: string;
   email?: string;
+  phone?: string;
 }
 
-export function validateGuestForm(name: string, email: string): GuestFormErrors {
+export function validateGuestForm(name: string, email: string, phone: number): GuestFormErrors {
   const errors: GuestFormErrors = {};
 
   const cleanName = sanitizeText(name, MAX_NAME_LENGTH);
@@ -50,10 +57,17 @@ export function validateGuestForm(name: string, email: string): GuestFormErrors 
     errors.email = "Enter a valid email address.";
   }
 
+  const cleanPhone = sanitizePhone(phone, MAX_PHONE_LENGTH);
+  if (!cleanPhone) {
+    errors.phone = "Enter your phone number.";
+  } else if (cleanPhone.toString().length < 7) {
+    errors.phone = "Phone number is too short.";
+  }
+
   return errors;
 }
 
-export function isGuestFormValid(name: string, email: string): boolean {
-  const errors = validateGuestForm(name, email);
+export function isGuestFormValid(name: string, email: string, phone: number): boolean {
+  const errors = validateGuestForm(name, email, phone);
   return Object.keys(errors).length === 0;
 }
