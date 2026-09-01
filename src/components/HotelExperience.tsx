@@ -27,7 +27,7 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
 
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [step, setStep] = useState<ModalStep>("detail");
-  const [guest, setGuest] = useState<GuestDetails>({ name: "", email: "" });
+  const [guest, setGuest] = useState<GuestDetails>({ name: "", email: "", phone: 0});
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -54,7 +54,7 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
     console.log("openRoom", room);
     setSelectedRoom(room);
     setStep("detail");
-    setGuest({ name: "", email: "" });
+    setGuest({ name: "", email: "", phone: 0 });
   }
 
   function closeModal() {
@@ -77,7 +77,7 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
       firstName,
       lastName,
       email: guest.email,
-      phone: undefined,
+      phone: guest.phone,
       totalAmount: selectedRoom.price * nights,
       numberOfGuests: booking.guests,
     } as any;

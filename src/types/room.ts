@@ -25,6 +25,7 @@ export interface BookingDetails {
 export interface GuestDetails {
   name: string;
   email: string;
+  phone: number;
 }
 
 export type ModalStep = "detail" | "form" | "confirmed";
