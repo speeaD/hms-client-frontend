@@ -28,6 +28,8 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [step, setStep] = useState<ModalStep>("detail");
   const [guest, setGuest] = useState<GuestDetails>({ name: "", email: "" });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const nights = useMemo(
     () => nightsBetween(booking.checkIn, booking.checkOut),
@@ -59,9 +61,57 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
     setSelectedRoom(null);
   }
 
-  function submitReservation() {
-    if (nights <= 0) return;
-    setStep("confirmed");
+  async function submitReservation() {
+    if (nights <= 0 || !selectedRoom) return;
+    if (isProcessing) return;
+
+    setIsProcessing(true);
+    setErrorMessage(null);
+
+    const [firstName, ...rest] = guest.name.trim().split(" ");
+    const lastName = rest.join(" ") || "";
+    const payload = {
+      roomId: selectedRoom.id,
+      checkInDate: booking.checkIn,
+      checkOutDate: booking.checkOut,
+      firstName,
+      lastName,
+      email: guest.email,
+      phone: undefined,
+      totalAmount: selectedRoom.price * nights,
+      numberOfGuests: booking.guests,
+    } as any;
+
+    try {
+      const resp = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const msg = body?.error || body?.message || "Failed to initialize payment";
+        throw new Error(msg);
+      }
+
+      // backend returns { success: true, data: { authorization_url, ... } }
+      const authorizationUrl = body?.data?.authorization_url || body?.authorization_url || null;
+      if (authorizationUrl) {
+        // Redirect the user to Paystack to complete payment
+        window.location.href = authorizationUrl;
+        return;
+      }
+
+      // If no URL returned, show confirmation in UI
+      setStep("confirmed");
+    } catch (err: any) {
+      console.error("Reservation/payment init failed", err);
+      setErrorMessage(err?.message || String(err));
+      // keep the modal open so the user can retry
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   return (
@@ -103,6 +153,7 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
           onBack={() => setStep("detail")}
           onSubmit={submitReservation}
           onClose={closeModal}
+          isProcessing={isProcessing}
         />
       )}
     </div>

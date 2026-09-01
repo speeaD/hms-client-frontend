@@ -19,6 +19,7 @@ interface RoomModalProps {
   onBack: () => void;
   onSubmit: () => void;
   onClose: () => void;
+  isProcessing?: boolean;
 }
 
 const FOCUSABLE_SELECTOR =
@@ -36,6 +37,7 @@ export default function RoomModal({
   onBack,
   onSubmit,
   onClose,
+  isProcessing,
 }: RoomModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = "room-modal-title";
@@ -143,7 +145,8 @@ export default function RoomModal({
               onEmail={onGuestEmail}
               onBack={onBack}
               onSubmit={onSubmit}
-            />
+            isProcessing={isProcessing}
+          />
           )}
 
           {step === "confirmed" && (
