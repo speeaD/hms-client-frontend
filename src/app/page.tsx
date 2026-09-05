@@ -3,5 +3,5 @@ import { ROOMS } from "@/data/rooms";
 
 export default async function Home() {
   const rooms = await ROOMS();
-  return <HotelExperience rooms={rooms} />;
+    return <HotelExperience rooms={rooms as [typeof rooms[number]]} />;
 }
