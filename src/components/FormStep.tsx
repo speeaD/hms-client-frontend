@@ -13,7 +13,7 @@ interface FormStepProps {
   email: string;
   onName: (value: string) => void;
   onEmail: (value: string) => void;
-  onPhone: (value: string) => void;
+  onPhone: (value: number) => void;
   onBack: () => void;
   onSubmit: () => void;
   isProcessing?: boolean;
@@ -67,17 +67,17 @@ export default function FormStep({
           maxLength={100}
           autoComplete="name"
           error={submitted ? errors.name : undefined}
-          onChange={onName}
+          onChange={(value) => onName(value as string)}
         />
         <Field
           label="Phone number"
-          type="tel"
-          value={phone.toString()}
+          type="number"
+          value={phone}
           placeholder="123-456-7890"
-          maxLength={20}
+          maxLength={12}
           autoComplete="tel"
           error={submitted ? errors.phone : undefined}
-          onChange={onPhone}
+          onChange={(value) => onPhone(value as number)}
         />
         <Field
           label="Email address"
@@ -87,7 +87,7 @@ export default function FormStep({
           maxLength={254}
           autoComplete="email"
           error={submitted ? errors.email : undefined}
-          onChange={onEmail}
+          onChange={(value) => onEmail(value as string)}
         />
       </div>
 

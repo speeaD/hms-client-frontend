@@ -28,11 +28,9 @@ export function sanitizeText(value: string, maxLength: number): string {
   return sanitizeOnChange(value, maxLength).trim();
 }
 
-export function sanitizePhone(value: number, maxLength: number): number {
-  const stringValue = value.toString();
-  const sanitizedValue = stringValue.replace(CONTROL_CHARS, "").slice(0, maxLength);
-  return parseInt(sanitizedValue, 10);
-}
+// export function sanitizePhone(value: number, maxLength: number): number {
+//   const stringValue = value.toString();
+// }
 
 export interface GuestFormErrors {
   name?: string;
@@ -57,10 +55,10 @@ export function validateGuestForm(name: string, email: string, phone: number): G
     errors.email = "Enter a valid email address.";
   }
 
-  const cleanPhone = sanitizePhone(phone, MAX_PHONE_LENGTH);
+  const cleanPhone = phone;
   if (!cleanPhone) {
     errors.phone = "Enter your phone number.";
-  } else if (cleanPhone.toString().length < 7) {
+  } else if (cleanPhone.toString().length < 11) {
     errors.phone = "Phone number is too short.";
   }
 

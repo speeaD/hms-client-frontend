@@ -12,8 +12,9 @@ export interface Room {
   price: number;
   image: string;
   imageAlt: string;
-  ammenities: string[];
+  amenities: string[];
   description: string;
+  status: "available" | "reserved" | "maintenance" | "occupied";
 }
 
 export interface BookingDetails {

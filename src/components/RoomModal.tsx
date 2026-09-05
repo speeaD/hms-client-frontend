@@ -144,7 +144,7 @@ export default function RoomModal({
               name={guest.name}
               email={guest.email}
               phone={guest.phone}
-              onPhone={(phone) => {onGuestPhone}}
+              onPhone={onGuestPhone}
               onName={onGuestName}
               onEmail={onGuestEmail}
               onBack={onBack}

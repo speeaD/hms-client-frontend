@@ -4,13 +4,13 @@ import { useId, useState } from "react";
 
 interface FieldProps {
   label: string;
-  type: "text" | "email" | "tel";
-  value: string;
+  type: "text" | "email" | "number";
+  value: string | number;
   placeholder: string;
   error?: string;
   maxLength: number;
   autoComplete?: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | number) => void;
 }
 
 export default function Field({

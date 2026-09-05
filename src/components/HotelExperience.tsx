@@ -77,23 +77,27 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
       firstName,
       lastName,
       email: guest.email,
-      phone: guest.phone,
+      phone: guest.phone.toString(),
       totalAmount: selectedRoom.price * nights,
       numberOfGuests: booking.guests,
     } as any;
 
     try {
-      const resp = await fetch("/api/reservations", {
+      const resp = await fetch("/api/reserve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const body = await resp.json().catch(() => ({}));
+      console.log("Reservation response", resp);
       if (!resp.ok) {
-        const msg = body?.error || body?.message || "Failed to initialize payment";
+        const errorData = await resp.json().catch(() => ({}));
+        const msg = errorData?.error || errorData?.message || "Failed to initialize payment";
         throw new Error(msg);
       }
+
+      const body = await resp.json().catch(() => ({}));
+      console.log("Reservation response body", body);
 
       // backend returns { success: true, data: { authorization_url, ... } }
       const authorizationUrl = body?.data?.authorization_url || body?.authorization_url || null;

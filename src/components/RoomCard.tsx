@@ -76,7 +76,7 @@ export default function RoomCard({ room, nights, featured, onSelect }: RoomCardP
             <p className="mb-3.5 text-[13px] leading-relaxed text-[#666]">{room.description}</p>
 
             <div className="flex flex-wrap gap-3">
-              {room.ammenities.map((f) => (
+              {room.amenities.map((f) => (
                 <span key={f} className="text-[11px] text-muted">
                   · {f}
                 </span>

@@ -1,13 +1,16 @@
 import type { Room } from "@/types/room";
-const baseUrl: string = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
+const baseUrl: string = process.env.BACKEND_URL|| "http://localhost:3000";
 
 
 export const ROOMS = async () => {
-  const data =  await fetch(baseUrl+ "/v1/room/")
+  const data =  await fetch(baseUrl+ "/room/");
   if (!data.ok) {
     throw new Error("Failed to fetch rooms");
   }
-  const rooms: [Room] = await data.json();
+  //filter out reserved rooms
+  // Only include rooms that are not reserved from room status
+  const allRooms: Room[] = await data.json();
+  const rooms = allRooms.filter(room =>  room.status === "available");
   return rooms;
 }
 

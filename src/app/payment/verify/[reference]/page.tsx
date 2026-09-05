@@ -2,10 +2,13 @@ import React from "react";
 
 import { verifyPayment, getReservation } from "../../../../lib/payments/verify";
 
-type Props = { params: { reference?: string } };
+type Props = {
+  params: Promise<{ reference: string }>;
+};
 
 function formatDate(value?: string | null): string {
   if (!value) return "—";
+
   return new Date(value).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -15,6 +18,7 @@ function formatDate(value?: string | null): string {
 
 function formatDateTime(value?: string | null): string {
   if (!value) return "—";
+
   return new Date(value).toLocaleString(undefined, {
     year: "numeric",
     month: "short",
@@ -26,130 +30,708 @@ function formatDateTime(value?: string | null): string {
 
 function formatAmount(amount?: number | null): string {
   if (amount === undefined || amount === null) return "—";
+
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "NGN" }).format(amount);
-  } catch (e) {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "NGN",
+    }).format(amount);
+  } catch {
     return String(amount);
   }
 }
 
-function SuccessContent({ payment, reservation, reference }: any) {
+function CheckIcon() {
   return (
-    <main style={{ padding: 24 }}>
-      <div>
-        <h1>Payment confirmed</h1>
-        <p>Your payment was confirmed and the reservation is booked.</p>
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M20 6L9 17L4 12"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
-        <section>
-          <h2>Payment</h2>
-          <dl>
-            <div>
-              <dt>Amount</dt>
-              <dd>{formatAmount(payment?.amount ?? null)}</dd>
-            </div>
-            <div>
-              <dt>Reference</dt>
-              <dd style={{ fontFamily: "monospace" }}>{reference}</dd>
-            </div>
-            <div>
-              <dt>Paid at</dt>
-              <dd style={{ fontFamily: "monospace" }}>{formatDateTime(payment?.paidAt ?? null)}</dd>
-            </div>
-          </dl>
+function CloseIcon() {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M18 6L6 18M6 6L18 18"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function WarningIcon() {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M10.3 4.3L2.7 17.2C2 18.4 2.9 20 4.3 20H19.7C21.1 20 22 18.4 21.3 17.2L13.7 4.3C13 3.1 11 3.1 10.3 4.3Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 9V13"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="16.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M5 12H19M13 6L19 12L13 18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
+  return (
+    <div className="info-row">
+      <dt>{label}</dt>
+      <dd className={mono ? "mono" : ""}>{value}</dd>
+    </div>
+  );
+}
+
+function PageShell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        .payment-page {
+          min-height: 100vh;
+          background:
+            radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+            radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.06), transparent 32%),
+            #f8fafc;
+          padding: 48px 20px;
+          color: #0f172a;
+          font-family:
+            Inter,
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+        }
+
+        .payment-container {
+          width: 100%;
+          max-width: 760px;
+          margin: 0 auto;
+        }
+
+        .brand {
+          text-align: center;
+          margin-bottom: 28px;
+        }
+
+        .brand-name {
+          margin: 0;
+          font-size: 18px;
+          line-height: 1.2;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: #0f172a;
+        }
+
+        .brand-subtitle {
+          margin: 6px 0 0;
+          color: #64748b;
+          font-size: 13px;
+        }
+
+        .payment-card {
+          overflow: hidden;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          box-shadow:
+            0 24px 60px rgba(15, 23, 42, 0.08),
+            0 8px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .status-section {
+          text-align: center;
+          padding: 42px 32px 34px;
+        }
+
+        .status-icon {
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+        }
+
+        .status-icon.success {
+          background: #dcfce7;
+          color: #16a34a;
+        }
+
+        .status-icon.declined {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+
+        .status-icon.warning {
+          background: #fef3c7;
+          color: #d97706;
+        }
+
+        .status-title {
+          margin: 0;
+          font-size: 30px;
+          line-height: 1.15;
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: #0f172a;
+        }
+
+        .status-description {
+          max-width: 560px;
+          margin: 12px auto 0;
+          font-size: 15px;
+          line-height: 1.65;
+          color: #64748b;
+        }
+
+        .content-section {
+          padding: 0 32px 32px;
+        }
+
+        .section-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 18px;
+          overflow: hidden;
+          background: #ffffff;
+        }
+
+        .section-header {
+          padding: 17px 20px;
+          border-bottom: 1px solid #e2e8f0;
+          background: #f8fafc;
+        }
+
+        .section-title {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 800;
+          color: #334155;
+          letter-spacing: 0.01em;
+        }
+
+        .details {
+          margin: 0;
+          padding: 4px 20px;
+        }
+
+        .info-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 24px;
+          padding: 17px 0;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .info-row:last-child {
+          border-bottom: 0;
+        }
+
+        .info-row dt {
+          color: #64748b;
+          font-size: 13px;
+          flex: 0 0 auto;
+        }
+
+        .info-row dd {
+          margin: 0;
+          text-align: right;
+          color: #0f172a;
+          font-size: 14px;
+          font-weight: 650;
+          word-break: break-word;
+        }
+
+        .mono {
+          font-family:
+            "SFMono-Regular",
+            Consolas,
+            "Liberation Mono",
+            Menlo,
+            monospace;
+          font-size: 12px !important;
+          font-weight: 500 !important;
+        }
+
+        .reservation-card {
+          margin-top: 18px;
+        }
+
+        .actions {
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+          padding: 0 32px 34px;
+        }
+
+        .button {
+          min-height: 46px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 0 18px;
+          border-radius: 12px;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 750;
+          transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease,
+            background 0.15s ease;
+        }
+
+        .button:hover {
+          transform: translateY(-1px);
+        }
+
+        .button-primary {
+          color: #ffffff;
+          background: #0f172a;
+          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+        }
+
+        .button-primary:hover {
+          background: #1e293b;
+        }
+
+        .button-secondary {
+          color: #334155;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+        }
+
+        .button-secondary:hover {
+          background: #f8fafc;
+        }
+
+        .support-message {
+          margin: 18px 0 0;
+          padding: 14px 16px;
+          border-radius: 12px;
+          background: #fffbeb;
+          border: 1px solid #fde68a;
+          color: #92400e;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+
+        .footer {
+          text-align: center;
+          margin-top: 20px;
+          color: #94a3b8;
+          font-size: 12px;
+        }
+
+        .footer a {
+          color: #64748b;
+          text-decoration: none;
+        }
+
+        .footer a:hover {
+          text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+          .payment-page {
+            padding: 24px 14px;
+          }
+
+          .payment-card {
+            border-radius: 20px;
+          }
+
+          .status-section {
+            padding: 34px 20px 28px;
+          }
+
+          .content-section,
+          .actions {
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+
+          .status-title {
+            font-size: 25px;
+          }
+
+          .status-description {
+            font-size: 14px;
+          }
+
+          .info-row {
+            flex-direction: column;
+            gap: 5px;
+          }
+
+          .info-row dd {
+            text-align: left;
+          }
+
+          .actions {
+            flex-direction: column;
+          }
+
+          .button {
+            width: 100%;
+          }
+        }
+      `}</style>
+
+      <main className="payment-page">
+        <div className="payment-container">
+          <div className="brand">
+            <p className="brand-name">Hotelliere</p>
+            <p className="brand-subtitle">Secure payment confirmation</p>
+          </div>
+
+          {children}
+
+          <div className="footer">
+            Need help?{" "}
+            <a href="mailto:frontdesk@yourhotel.com">
+              Contact front desk
+            </a>
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}
+
+function SuccessContent({
+  payment,
+  reservation,
+  reference,
+}: any) {
+  return (
+    <PageShell>
+      <div className="payment-card">
+        <section className="status-section">
+          <div className="status-icon success">
+            <CheckIcon />
+          </div>
+
+          <h1 className="status-title">Payment confirmed</h1>
+
+          <p className="status-description">
+            Your payment was confirmed successfully and your reservation is
+            booked.
+          </p>
         </section>
 
-        {reservation && (
-          <section>
-            <h2>Reservation</h2>
-            <dl>
-              <div>
-                <dt>Guest</dt>
-                <dd>{[reservation.firstName, reservation.lastName].filter(Boolean).join(" ") || "—"}</dd>
-              </div>
-              <div>
-                <dt>Room</dt>
-                <dd>{reservation.room?.roomNumber || "—"}</dd>
-              </div>
-              <div>
-                <dt>Check-in</dt>
-                <dd style={{ fontFamily: "monospace" }}>{formatDate(reservation.checkInDate)}</dd>
-              </div>
-              <div>
-                <dt>Check-out</dt>
-                <dd style={{ fontFamily: "monospace" }}>{formatDate(reservation.checkOutDate)}</dd>
-              </div>
+        <div className="content-section">
+          <section className="section-card">
+            <div className="section-header">
+              <h2 className="section-title">Payment details</h2>
+            </div>
+
+            <dl className="details">
+              <InfoRow
+                label="Amount"
+                value={formatAmount(payment?.amount ?? null)}
+              />
+
+              <InfoRow
+                label="Reference"
+                value={reference}
+                mono
+              />
+
+              <InfoRow
+                label="Paid at"
+                value={formatDateTime(payment?.paidAt ?? null)}
+                mono
+              />
             </dl>
-            <p>
-              <a href={`/reservations/${reservation.id}`}>View reservation</a>
-            </p>
           </section>
+
+          {reservation && (
+            <section className="section-card reservation-card">
+              <div className="section-header">
+                <h2 className="section-title">Reservation details</h2>
+              </div>
+
+              <dl className="details">
+                <InfoRow
+                  label="Guest"
+                  value={
+                    [reservation.firstName, reservation.lastName]
+                      .filter(Boolean)
+                      .join(" ") || "—"
+                  }
+                />
+
+                <InfoRow
+                  label="Room"
+                  value={reservation.room?.roomNumber || "—"}
+                />
+
+                <InfoRow
+                  label="Check-in"
+                  value={formatDate(reservation.checkInDate)}
+                />
+
+                <InfoRow
+                  label="Check-out"
+                  value={formatDate(reservation.checkOutDate)}
+                />
+              </dl>
+            </section>
+          )}
+        </div>
+
+        {reservation && (
+          <div className="actions">
+            <a
+              href={`/reservations/${reservation.id}`}
+              className="button button-primary"
+            >
+              View reservation
+              <ArrowRightIcon />
+            </a>
+          </div>
         )}
       </div>
-    </main>
+    </PageShell>
   );
 }
 
-function DeclinedContent({ payment, reference }: any) {
+function DeclinedContent({
+  payment,
+  reference,
+}: any) {
   return (
-    <main style={{ padding: 24 }}>
-      <h1>Payment didn&apos;t go through</h1>
-      <p>Your card wasn&apos;t charged. You can try again or use a different card.</p>
-
-      <section>
-        <h2>Payment</h2>
-        <dl>
-          <div>
-            <dt>Amount</dt>
-            <dd>{formatAmount(payment?.amount ?? null)}</dd>
+    <PageShell>
+      <div className="payment-card">
+        <section className="status-section">
+          <div className="status-icon declined">
+            <CloseIcon />
           </div>
-          <div>
-            <dt>Reference</dt>
-            <dd style={{ fontFamily: "monospace" }}>{reference}</dd>
-          </div>
-        </dl>
-      </section>
 
-      <p>
-        <a href="/book">Try again</a>
-      </p>
-    </main>
+          <h1 className="status-title">Payment didn&apos;t go through</h1>
+
+          <p className="status-description">
+            Your card wasn&apos;t charged. You can try again or use a
+            different payment method.
+          </p>
+        </section>
+
+        <div className="content-section">
+          <section className="section-card">
+            <div className="section-header">
+              <h2 className="section-title">Payment details</h2>
+            </div>
+
+            <dl className="details">
+              <InfoRow
+                label="Amount"
+                value={formatAmount(payment?.amount ?? null)}
+              />
+
+              <InfoRow
+                label="Reference"
+                value={reference}
+                mono
+              />
+            </dl>
+          </section>
+        </div>
+
+        <div className="actions">
+          <a href="/book" className="button button-primary">
+            Try again
+            <ArrowRightIcon />
+          </a>
+        </div>
+      </div>
+    </PageShell>
   );
 }
 
-function ErrorContent({ message }: any) {
+function ErrorContent({
+  message,
+}: any) {
   return (
-    <main style={{ padding: 24 }}>
-      <h1>We couldn&apos;t confirm this payment</h1>
-      <p>{message ?? "Something went wrong while confirming your payment."}</p>
-      <p>If money left your account, it will be reconciled automatically — you don&apos;t need to pay again.</p>
-      <p>
-        <a href="mailto:frontdesk@yourhotel.com">Contact support</a>
-      </p>
-    </main>
+    <PageShell>
+      <div className="payment-card">
+        <section className="status-section">
+          <div className="status-icon warning">
+            <WarningIcon />
+          </div>
+
+          <h1 className="status-title">
+            We couldn&apos;t confirm this payment
+          </h1>
+
+          <p className="status-description">
+            {message ??
+              "Something went wrong while confirming your payment."}
+          </p>
+        </section>
+
+        <div className="content-section">
+          <div className="support-message">
+            If money left your account, it will be reconciled
+            automatically. You don&apos;t need to pay again.
+          </div>
+        </div>
+
+        <div className="actions">
+          <a
+            href="mailto:frontdesk@yourhotel.com"
+            className="button button-primary"
+          >
+            Contact support
+          </a>
+
+          <a href="/book" className="button button-secondary">
+            Return to booking
+          </a>
+        </div>
+      </div>
+    </PageShell>
   );
 }
 
 function UnexpectedErrorContent() {
   return (
-    <main style={{ padding: 24 }}>
-      <h1>We couldn&apos;t confirm this payment</h1>
-      <p>Unexpected error while confirming your payment.</p>
-      <p>
-        <a href="mailto:frontdesk@yourhotel.com">Contact support</a>
-      </p>
-    </main>
+    <PageShell>
+      <div className="payment-card">
+        <section className="status-section">
+          <div className="status-icon warning">
+            <WarningIcon />
+          </div>
+
+          <h1 className="status-title">
+            We couldn&apos;t confirm this payment
+          </h1>
+
+          <p className="status-description">
+            An unexpected error occurred while confirming your payment.
+          </p>
+        </section>
+
+        <div className="content-section">
+          <div className="support-message">
+            If money left your account, it will be reconciled
+            automatically. You don&apos;t need to pay again.
+          </div>
+        </div>
+
+        <div className="actions">
+          <a
+            href="mailto:frontdesk@yourhotel.com"
+            className="button button-primary"
+          >
+            Contact support
+          </a>
+
+          <a href="/book" className="button button-secondary">
+            Return to booking
+          </a>
+        </div>
+      </div>
+    </PageShell>
   );
 }
 
-export default async function PaymentVerifyPage({ params }: Props) {
-  const reference = params?.reference;
+export default async function PaymentVerifyPage({
+  params,
+}: Props) {
+  const { reference } = await params;
 
   if (!reference) {
     return (
-      <main style={{ padding: 24 }}>
-        <h1>Missing payment reference</h1>
-        <p>No payment reference was provided.</p>
-      </main>
+      <PageShell>
+        <div className="payment-card">
+          <section className="status-section">
+            <div className="status-icon warning">
+              <WarningIcon />
+            </div>
+
+            <h1 className="status-title">
+              Missing payment reference
+            </h1>
+
+            <p className="status-description">
+              No payment reference was provided.
+            </p>
+          </section>
+        </div>
+      </PageShell>
     );
   }
 
@@ -157,39 +739,59 @@ export default async function PaymentVerifyPage({ params }: Props) {
   let reservation: any = null;
   let errorMessage: string | undefined;
   let isUnexpectedError = false;
+  let isSuccessful = false;
   let isDeclined = false;
 
   try {
     const verified = await verifyPayment(reference);
     const body = verified.body;
+    console.log("Payment verification response:", verified, body);
 
     // Success path
     if (verified.ok && body?.success) {
       payment = body.data ?? null;
+      isSuccessful = true;
 
       if (payment?.reservationId) {
         try {
           const resv = await getReservation(payment.reservationId);
-          if (resv.ok) reservation = resv.body;
-        } catch (err) {
-          // non-fatal
+
+          if (resv.ok) {
+            reservation = resv.body;
+          }
+        } catch {
+          // Non-fatal: payment can still be shown without reservation data.
         }
       }
-
-      return <SuccessContent payment={payment} reservation={reservation} reference={reference} />;
-    }
-
-    // Declined (400 from API)
-    if (verified.status === 400) {
+    } else if (verified.status === 400) {
+      // Declined (400 from API)
       payment = body?.data ?? null;
       isDeclined = true;
-      return <DeclinedContent payment={payment} reference={reference} />;
+    } else {
+      // Generic error
+      errorMessage = body?.message;
     }
-
-    // Generic error
-    errorMessage = body?.message;
-  } catch (err) {
+  } catch {
     isUnexpectedError = true;
+  }
+
+  if (isSuccessful) {
+    return (
+      <SuccessContent
+        payment={payment}
+        reservation={reservation}
+        reference={reference}
+      />
+    );
+  }
+
+  if (isDeclined) {
+    return (
+      <DeclinedContent
+        payment={payment}
+        reference={reference}
+      />
+    );
   }
 
   if (isUnexpectedError) {

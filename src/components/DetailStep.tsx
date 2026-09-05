@@ -38,7 +38,7 @@ export default function DetailStep({
       <p className="mb-5 text-sm leading-relaxed text-[#555]">{room.description}</p>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        {room.ammenities.map((f) => (
+        {room.amenities.map((f) => (
           <span key={f} className="rounded-sm border border-border px-2.5 py-1 text-[11px] text-[#555]">
             {f}
           </span>
