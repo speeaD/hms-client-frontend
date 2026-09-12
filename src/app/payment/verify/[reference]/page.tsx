@@ -1,20 +1,18 @@
 import React from "react";
 
 import { verifyPayment, getReservation } from "../../../../lib/payments/verify";
+import type { PaymentData } from "../../../../lib/payments/verify";
+import type { Reservation } from "../../../../lib/types";
+import {
+  formatCurrency,
+  formatDate,
+  formatGuestCount,
+  nightsBetween,
+} from "../../../../lib/format";
 
 type Props = {
   params: Promise<{ reference: string }>;
 };
-
-function formatDate(value?: string | null): string {
-  if (!value) return "—";
-
-  return new Date(value).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 function formatDateTime(value?: string | null): string {
   if (!value) return "—";
@@ -26,19 +24,6 @@ function formatDateTime(value?: string | null): string {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function formatAmount(amount?: number | null): string {
-  if (amount === undefined || amount === null) return "—";
-
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: "NGN",
-    }).format(amount);
-  } catch {
-    return String(amount);
-  }
 }
 
 function CheckIcon() {
@@ -475,7 +460,11 @@ function SuccessContent({
   payment,
   reservation,
   reference,
-}: any) {
+}: {
+  payment: PaymentData | null;
+  reservation: Reservation | null;
+  reference: string;
+}) {
   return (
     <PageShell>
       <div className="payment-card">
@@ -501,7 +490,7 @@ function SuccessContent({
             <dl className="details">
               <InfoRow
                 label="Amount"
-                value={formatAmount(payment?.amount ?? null)}
+                value={formatCurrency(payment?.amount)}
               />
 
               <InfoRow
@@ -536,7 +525,11 @@ function SuccessContent({
 
                 <InfoRow
                   label="Room"
-                  value={reservation.room?.roomNumber || "—"}
+                  value={
+                    reservation.room
+                      ? `${reservation.room.roomNumber} · ${reservation.room.name}`
+                      : "—"
+                  }
                 />
 
                 <InfoRow
@@ -547,6 +540,21 @@ function SuccessContent({
                 <InfoRow
                   label="Check-out"
                   value={formatDate(reservation.checkOutDate)}
+                />
+
+                <InfoRow
+                  label="Guests"
+                  value={formatGuestCount(reservation.numberOfGuests)}
+                />
+
+                <InfoRow
+                  label="Nights"
+                  value={nightsBetween(reservation.checkInDate, reservation.checkOutDate)}
+                />
+
+                <InfoRow
+                  label="Total"
+                  value={formatCurrency(reservation.totalAmount)}
                 />
               </dl>
             </section>
@@ -572,7 +580,7 @@ function SuccessContent({
 function DeclinedContent({
   payment,
   reference,
-}: any) {
+}: { payment: PaymentData | null; reference: string }) {
   return (
     <PageShell>
       <div className="payment-card">
@@ -598,7 +606,7 @@ function DeclinedContent({
             <dl className="details">
               <InfoRow
                 label="Amount"
-                value={formatAmount(payment?.amount ?? null)}
+                value={formatCurrency(payment?.amount)}
               />
 
               <InfoRow
@@ -735,8 +743,8 @@ export default async function PaymentVerifyPage({
     );
   }
 
-  let payment: any = null;
-  let reservation: any = null;
+  let payment: PaymentData | null = null;
+  let reservation: Reservation | null = null;
   let errorMessage: string | undefined;
   let isUnexpectedError = false;
   let isSuccessful = false;

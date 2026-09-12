@@ -1,38 +1,49 @@
+import type { Reservation } from "../types";
+
 export type PaymentData = {
   status: string;
-  amount?: number;
+  amount?: string | number;
   paidAt?: string;
   reservationId?: string;
 };
 
+type VerificationBody = {
+  success?: boolean;
+  data?: PaymentData;
+  message?: string;
+};
 
+const API_BASE = (process.env.BACKEND_URL || "http://localhost:5001/v1").replace(/\/$/, "");
 
-const API_BASE = process.env.BACKEND_URL || "http://localhost:5001/v1";
-
-export async function verifyPayment(reference: string) {
-  const url = `${API_BASE}reservation/verify-payment/${encodeURIComponent(reference)}`;
-  console.log(url);
+export async function verifyPayment(reference: string): Promise<{
+  ok: boolean;
+  status: number;
+  body: VerificationBody | null;
+}> {
+  const url = `${API_BASE}/reservation/verify-payment/${encodeURIComponent(reference)}`;
   const res = await fetch(url, { method: "GET", headers: { Accept: "application/json" } });
-  let body: any = null;
-  console.log(res)
+  let body: VerificationBody | null = null;
   try {
-    body = await res.json();
-    console.log(body)
-  } catch (err) {
-    // ignore JSON parse errors — will handle below
+    body = (await res.json()) as VerificationBody;
+  } catch {
+    // The caller handles an empty or invalid response as a failed verification.
   }
 
   return { ok: res.ok, status: res.status, body };
 }
 
-export async function getReservation(reservationId: string) {
+export async function getReservation(reservationId: string): Promise<{
+  ok: boolean;
+  status: number;
+  body: Reservation | null;
+}> {
   const url = `${API_BASE}/reservation/${encodeURIComponent(reservationId)}`;
   const res = await fetch(url, { method: "GET", headers: { Accept: "application/json" } });
-  let body: any = null;
+  let body: Reservation | null = null;
   try {
-    body = await res.json();
-  } catch (err) {
-    // ignore
+    body = (await res.json()) as Reservation;
+  } catch {
+    // The caller can still render payment details without reservation data.
   }
   return { ok: res.ok, status: res.status, body };
 }
