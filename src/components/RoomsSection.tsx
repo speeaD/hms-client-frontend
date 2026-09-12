@@ -4,6 +4,9 @@ import type { Room } from "@/types/room";
 
 interface RoomsSectionProps {
   rooms: Room[];
+  isLoading: boolean;
+  errorMessage: string | null;
+  onRetry: () => void;
   activeCategory: string;
   onCategoryChange: (category: string) => void;
   checkIn: string;
@@ -14,6 +17,9 @@ interface RoomsSectionProps {
 
 export default function RoomsSection({
   rooms,
+  isLoading,
+  errorMessage,
+  onRetry,
   activeCategory,
   onCategoryChange,
   checkIn,
@@ -66,7 +72,28 @@ export default function RoomsSection({
         </p>
       )}
 
-      {rooms.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2" aria-label="Loading rooms">
+          {[0, 1].map((placeholder) => (
+            <div
+              key={placeholder}
+              className="h-[310px] animate-pulse rounded-[3px] bg-[#f0eeeb]"
+            />
+          ))}
+        </div>
+      ) : errorMessage ? (
+        <div className="py-24 text-center text-faint">
+          <p className="mb-2 font-display text-xl text-ink">Rooms are unavailable</p>
+          <p className="mb-5 text-sm">{errorMessage}</p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.1em] text-ink"
+          >
+            Try again
+          </button>
+        </div>
+      ) : rooms.length === 0 ? (
         <div className="py-24 text-center text-faint">
           <p className="mb-2 font-display text-xl text-ink">No rooms match</p>
           <p className="text-sm">Try changing the guest count or category.</p>

@@ -10,14 +10,14 @@ import { addDaysISO, nightsBetween, todayISO } from "@/lib/dates";
 import { sanitizeOnChange } from "@/lib/validation";
 import type { BookingDetails, GuestDetails, ModalStep, Room } from "@/types/room";
 
-interface HotelExperienceProps {
-  rooms: Room[];
-}
-
 const TODAY = todayISO();
 const TOMORROW = addDaysISO(TODAY, 1);
 
-export default function HotelExperience({ rooms }: HotelExperienceProps) {
+export default function HotelExperience() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomsLoading, setRoomsLoading] = useState(true);
+  const [roomsError, setRoomsError] = useState<string | null>(null);
+  const [roomsRequestKey, setRoomsRequestKey] = useState(0);
   const [booking, setBooking] = useState<BookingDetails>({
     checkIn: TODAY,
     checkOut: TOMORROW,
@@ -37,8 +37,45 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
   );
 
   useEffect(() => {
-    console.log("HotelExperience mounted");
-  }, []);
+    const controller = new AbortController();
+
+    async function loadRooms() {
+      setRoomsLoading(true);
+      setRoomsError(null);
+
+      try {
+        const response = await fetch("/api/rooms", { signal: controller.signal });
+        const body = (await response.json().catch(() => null)) as
+          | Room[]
+          | { error?: string }
+          | null;
+
+        if (!response.ok) {
+          throw new Error(
+            body && !Array.isArray(body) && body.error
+              ? body.error
+              : "Rooms are temporarily unavailable."
+          );
+        }
+
+        if (!Array.isArray(body)) {
+          throw new Error("Rooms response was invalid.");
+        }
+
+        setRooms(body);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setRoomsError(
+          error instanceof Error ? error.message : "Rooms are temporarily unavailable."
+        );
+      } finally {
+        if (!controller.signal.aborted) setRoomsLoading(false);
+      }
+    }
+
+    void loadRooms();
+    return () => controller.abort();
+  }, [roomsRequestKey]);
 
   const filteredRooms = useMemo(
     () =>
@@ -132,6 +169,9 @@ export default function HotelExperience({ rooms }: HotelExperienceProps) {
 
       <RoomsSection
         rooms={filteredRooms}
+        isLoading={roomsLoading}
+        errorMessage={roomsError}
+        onRetry={() => setRoomsRequestKey((key) => key + 1)}
         activeCategory={category}
         onCategoryChange={setCategory}
         checkIn={booking.checkIn}
