@@ -3,7 +3,7 @@
  * exist so the same rules can be re-applied server-side without surprises,
  * and so the UI never accepts obviously malformed or oversized input.
  */
-const MAX_PHONE_LENGTH = 11; // arbitrary, but long enough for international numbers
+const MAX_PHONE_LENGTH = 10; // arbitrary, but long enough for international numbers
 const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 254; // RFC 5321 limit
 // Deliberately simple/conservative: good enough to catch typos client-side.
@@ -58,7 +58,7 @@ export function validateGuestForm(name: string, email: string, phone: number): G
   const cleanPhone = phone;
   if (!cleanPhone) {
     errors.phone = "Enter your phone number.";
-  } else if (cleanPhone.toString().length < 11) {
+  } else if (cleanPhone.toString().length < 10) {
     errors.phone = "Phone number is too short.";
   }
 
