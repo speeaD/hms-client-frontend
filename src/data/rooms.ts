@@ -1,18 +1,22 @@
-import type { Room } from "@/types/room";
-const baseUrl: string = process.env.BACKEND_URL|| "http://localhost:3000";
+import "server-only";
 
+import type { Room } from "@/types/room";
+
+const baseUrl = process.env.BACKEND_URL?.replace(/\/$/, "");
 
 export const ROOMS = async () => {
-  const data =  await fetch(baseUrl+ "/room/");
-  if (!data.ok) {
-    throw new Error("Failed to fetch rooms");
+  if (!baseUrl) {
+    throw new Error("BACKEND_URL is not configured. Add it to the deployment environment.");
   }
-  //filter out reserved rooms
-  // Only include rooms that are not reserved from room status
+
+  const data = await fetch(`${baseUrl}/room/`, { cache: "no-store" });
+  if (!data.ok) {
+    throw new Error(`Failed to fetch rooms: ${data.status}`);
+  }
+
   const allRooms: Room[] = await data.json();
-  const rooms = allRooms.filter(room =>  room.status === "available");
-  return rooms;
-}
+  return allRooms.filter((room) => room.status === "available");
+};
 
 // export const ROOM_CATEGORIES: { label: string; value: "All" | Room["category"] }[] = [
 //   { label: "All", value: "All" },
